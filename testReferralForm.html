@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Partner Link Form Test</title>
+</head>
+
+<body>
+  <h1>Partner Link Form Test</h1>
+
+  <form id="test-form">
+    <div>
+      <label>First Name:</label>
+      <input type="text" name="FName" required>
+    </div>
+    <div>
+      <label>Last Name:</label>
+      <input type="text" name="LName" required>
+    </div>
+    <div>
+      <label>Email:</label>
+      <input type="email" name="Email" required>
+    </div>
+    <div>
+      <label>Phone:</label>
+      <input type="tel" name="Phone" required>
+    </div>
+    <button type="submit">Submit</button>
+  </form>
+
+  <div id="output" style="margin-top: 20px; padding: 10px; background: #f0f0f0;"></div>
+
+  <!-- Partner Link Script -->
+  <script src="https://widget.partner.io/partnerLink.js"></script>
+  <script>
+    window.partnerLinkLibrary.init();
+  </script>
+
+  <!-- JS Tracking -->
+  <script>
+    const form = document.getElementById('test-form');
+    const output = document.getElementById('output');
+
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault();
+
+      output.innerHTML = 'Processing...';
+
+      if (!window.partnerLinkLibrary) {
+        output.innerHTML = 'ERROR: Partner Link library not loaded';
+        return;
+      }
+
+      try {
+        // Extract form data
+        const signUpData = window.partnerLinkLibrary.getSignUpDataFromFormElement(form);
+        console.alert('Extracted data:', signUpData);
+
+        // Send to Partner.io
+        const statusCode = await window.partnerLinkLibrary.recordSignUpEvent(signUpData);
+        console.alert('API status code:', statusCode);
+
+        output.innerHTML = `
+          <strong>SUCCESS</strong><br>
+          Status Code: ${statusCode}<br>
+          Data sent: ${JSON.stringify(signUpData, null, 2)}<br>
+          Check Network tab for POST to /tracking/partner-links
+        `;
+
+        form.reset();
+      } catch (error) {
+        console.error('Error:', error);
+        output.innerHTML = `<strong>FAILED</strong><br>${error.message}`;
+      }
+    });
+  </script>
+</body>
+
+</html>
