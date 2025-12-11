@@ -55,11 +55,11 @@
       try {
         // Extract form data
         const signUpData = window.partnerLinkLibrary.getSignUpDataFromFormElement(form);
-        console.alert('Extracted data:', signUpData);
+        console.log('Extracted data:', signUpData);
 
         // Send to Partner.io
         const statusCode = await window.partnerLinkLibrary.recordSignUpEvent(signUpData);
-        console.alert('API status code:', statusCode);
+        console.log('API status code:', statusCode);
 
         output.innerHTML = `
           <strong>SUCCESS</strong><br>
