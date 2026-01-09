@@ -10,8 +10,15 @@ body {
 h1 {
   color: #333;
   font-size: 24px;
-  margin-bottom: 30px;
+  margin-bottom: 10px;
   text-align: center;
+}
+
+.subtitle {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 30px;
 }
 
 form {
@@ -88,4 +95,49 @@ button:active {
   display: block;
   margin-bottom: 8px;
   font-size: 16px;
+}
+
+.test-mode {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: auto;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.checkbox-label span {
+  user-select: none;
+}
+
+.mode-description {
+  margin: 10px 0 0 0;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.mode-description.ajax {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.mode-description.traditional {
+  background: #fff3cd;
+  color: #856404;
 }

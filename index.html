@@ -3,12 +3,25 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Partner Link Form Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Partner Link Test</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-  <h1>Partner Link Form Test</h1>
+  <h1>Partner Link Test</h1>
+  <p class="subtitle">Test partner link tracking with different form submission modes</p>
+
+  <!-- Test Mode Toggle -->
+  <div class="test-mode">
+    <label class="checkbox-label">
+      <input type="checkbox" id="ajax-mode" checked>
+      <span>AJAX Mode (preventDefault - simulates Webflow/Squarespace)</span>
+    </label>
+    <p class="mode-description" id="mode-description">
+      ✓ Form submission prevented - page stays loaded (like AJAX forms)
+    </p>
+  </div>
 
   <form id="test-form">
     <div class="form-group">
@@ -42,33 +55,57 @@
     window.partnerLinkLibrary.init();
   </script>
 
-  <!-- JS Tracking -->
+  <!-- Form Tracking Script -->
   <script>
-
     document.addEventListener('DOMContentLoaded', function () {
       const form = document.getElementById('test-form');
       const output = document.getElementById('output');
+      const ajaxModeCheckbox = document.getElementById('ajax-mode');
+      const modeDescription = document.getElementById('mode-description');
 
       if (!form) {
         output.innerHTML = 'ERROR: Form not found';
         return;
       }
 
+      // Update mode description when checkbox changes
+      ajaxModeCheckbox.addEventListener('change', function () {
+        if (ajaxModeCheckbox.checked) {
+          modeDescription.innerHTML = '✓ Form submission prevented - page stays loaded (like AJAX forms)';
+          modeDescription.className = 'mode-description ajax';
+        } else {
+          modeDescription.innerHTML = '⚠️ Form will submit naturally - page will reload (like traditional forms)';
+          modeDescription.className = 'mode-description traditional';
+        }
+      });
+
       form.addEventListener('submit', function (event) {
-        event.preventDefault();
+        const isAjaxMode = ajaxModeCheckbox.checked;
+
+        // Only preventDefault if in AJAX mode
+        if (isAjaxMode) {
+          event.preventDefault();
+        }
 
         output.innerHTML = 'Processing...';
 
         // Check if Partner Link library is loaded
         if (!window.partnerLinkLibrary) {
           output.innerHTML = 'ERROR: Partner Link library not loaded';
+          if (!isAjaxMode) {
+            alert('ERROR: Partner Link library not loaded (form will still submit)');
+          }
           return;
         }
 
         // Check if PLID exists
         const plid = window.partnerLinkLibrary.getPlid();
         if (!plid) {
-          output.innerHTML = 'ERROR: No Partner Link ID found in URL. Add ?plid=YOUR_ID to the URL.';
+          const errorMsg = 'No Partner Link ID found in URL. Add ?plid=YOUR_ID to the URL.';
+          output.innerHTML = `ERROR: ${errorMsg}`;
+          if (!isAjaxMode) {
+            alert(`ERROR: ${errorMsg} (form will still submit)`);
+          }
           return;
         }
 
@@ -76,74 +113,42 @@
         const signUpData = window.partnerLinkLibrary.getSignUpDataFromFormElement(form);
         console.log('Extracted data:', signUpData);
 
-        // Send to Partner.io (fire and forget - don't await)
+        // Send to Partner.io (fire and forget)
         if (signUpData && signUpData.length > 0) {
           const request = window.partnerLinkLibrary.recordSignUpEvent(signUpData);
 
-          // Check if request was actually made
-          if (request && request.then) {
+          // Show results (only works in AJAX mode)
+          if (request && request.then && isAjaxMode) {
             request
               .then(function (statusCode) {
                 console.log('API status code:', statusCode);
 
                 output.innerHTML = `
-              <strong>SUCCESS</strong><br>
-              Status Code: ${statusCode}<br>
-              PLID: ${plid}<br>
-              Data sent: ${JSON.stringify(signUpData, null, 2)}<br>
-              Check Network tab for POST to /tracking/partner-links
-            `;
+                  <strong>SUCCESS</strong><br>
+                  Status Code: ${statusCode}<br>
+                  PLID: ${plid}<br>
+                  Mode: ${isAjaxMode ? 'AJAX (preventDefault)' : 'Traditional (natural submit)'}<br>
+                  Data sent: ${JSON.stringify(signUpData, null, 2)}<br>
+                  Check Network tab for POST to /tracking/partner-links
+                `;
 
-                form.reset();
+                setTimeout(function () {
+                  output.innerHTML += '<br><br><em>✓ Form submission prevented - no page reload</em>';
+                }, 500);
               })
               .catch(function (error) {
                 console.error('Error:', error);
                 output.innerHTML = `<strong>FAILED</strong><br>${error.message}`;
               });
-          } else {
-            output.innerHTML = 'ERROR: Failed to initiate tracking request';
+          } else if (!isAjaxMode) {
+            // In traditional mode, tracking fires but page will reload
+            console.log('Traditional mode: Tracking fired, page will reload...');
           }
         } else {
           output.innerHTML = 'ERROR: No form data extracted';
         }
       });
     });
-
-    // const form = document.getElementById('test-form');
-    // const output = document.getElementById('output');
-
-    // form.addEventListener('submit', async function (event) {
-    //   event.preventDefault();
-
-    //   output.innerHTML = 'Processing...';
-
-    //   if (!window.partnerLinkLibrary) {
-    //     output.innerHTML = 'ERROR: Partner Link library not loaded';
-    //     return;
-    //   }
-
-    //   try {
-    //     // Extract form data
-    //     const signUpData = window.partnerLinkLibrary.getSignUpDataFromFormElement(form);
-    //     console.log('Extracted data:', signUpData);
-
-    //     // Send to Partner.io
-    //     const statusCode = await window.partnerLinkLibrary.recordSignUpEvent(signUpData);
-    //     console.log('API status code:', statusCode);
-
-    //     output.innerHTML = `
-    //       <strong>SUCCESS</strong><br>
-    //       Status Code: ${statusCode}<br>
-    //       Data sent: ${JSON.stringify(signUpData, null, 2)}<br>
-    //       Check Network tab for POST to /tracking/partner-links
-    //     `;
-
-    //     form.reset();
-    //   } catch (error) {
-    //     console.error('Error:', error);
-    //     output.innerHTML = `<strong>FAILED</strong><br>${error.message}`;
-    //   }
-    // });
   </script>
 </body>
 
