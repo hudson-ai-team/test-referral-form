@@ -39,41 +39,91 @@
 
   <!-- JS Tracking -->
   <script>
-    const form = document.getElementById('test-form');
-    const output = document.getElementById('output');
 
-    form.addEventListener('submit', async function (event) {
-      event.preventDefault();
+    document.addEventListener('DOMContentLoaded', function () {
+      const form = document.getElementById('test-form');
+      const output = document.getElementById('output');
 
-      output.innerHTML = 'Processing...';
-
-      if (!window.partnerLinkLibrary) {
-        output.innerHTML = 'ERROR: Partner Link library not loaded';
+      if (!form) {
+        output.innerHTML = 'ERROR: Form not found';
         return;
       }
 
-      try {
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        output.innerHTML = 'Processing...';
+
+        // Check if Partner Link library is loaded
+        if (!window.partnerLinkLibrary) {
+          output.innerHTML = 'ERROR: Partner Link library not loaded';
+          return;
+        }
+
         // Extract form data
         const signUpData = window.partnerLinkLibrary.getSignUpDataFromFormElement(form);
         console.log('Extracted data:', signUpData);
 
-        // Send to Partner.io
-        const statusCode = await window.partnerLinkLibrary.recordSignUpEvent(signUpData);
-        console.log('API status code:', statusCode);
+        // Send to Partner.io (fire and forget - don't await)
+        if (signUpData && signUpData.length > 0) {
+          window.partnerLinkLibrary.recordSignUpEvent(signUpData)
+            .then(function (statusCode) {
+              console.log('API status code:', statusCode);
 
-        output.innerHTML = `
-          <strong>SUCCESS</strong><br>
-          Status Code: ${statusCode}<br>
-          Data sent: ${JSON.stringify(signUpData, null, 2)}<br>
-          Check Network tab for POST to /tracking/partner-links
-        `;
+              output.innerHTML = `
+            <strong>SUCCESS</strong><br>
+            Status Code: ${statusCode}<br>
+            Data sent: ${JSON.stringify(signUpData, null, 2)}<br>
+            Check Network tab for POST to /tracking/partner-links
+          `;
 
-        form.reset();
-      } catch (error) {
-        console.error('Error:', error);
-        output.innerHTML = `<strong>FAILED</strong><br>${error.message}`;
-      }
+              form.reset();
+            })
+            .catch(function (error) {
+              console.error('Error:', error);
+              output.innerHTML = `<strong>FAILED</strong><br>${error.message}`;
+            });
+        } else {
+          output.innerHTML = 'ERROR: No form data extracted';
+        }
+      });
     });
+
+    // const form = document.getElementById('test-form');
+    // const output = document.getElementById('output');
+
+    // form.addEventListener('submit', async function (event) {
+    //   event.preventDefault();
+
+    //   output.innerHTML = 'Processing...';
+
+    //   if (!window.partnerLinkLibrary) {
+    //     output.innerHTML = 'ERROR: Partner Link library not loaded';
+    //     return;
+    //   }
+
+    //   try {
+    //     // Extract form data
+    //     const signUpData = window.partnerLinkLibrary.getSignUpDataFromFormElement(form);
+    //     console.log('Extracted data:', signUpData);
+
+    //     // Send to Partner.io
+    //     const statusCode = await window.partnerLinkLibrary.recordSignUpEvent(signUpData);
+    //     console.log('API status code:', statusCode);
+
+    //     output.innerHTML = `
+    //       <strong>SUCCESS</strong><br>
+    //       Status Code: ${statusCode}<br>
+    //       Data sent: ${JSON.stringify(signUpData, null, 2)}<br>
+    //       Check Network tab for POST to /tracking/partner-links
+    //     `;
+
+    //     form.reset();
+    //   } catch (error) {
+    //     console.error('Error:', error);
+    //     output.innerHTML = `<strong>FAILED</strong><br>${error.message}`;
+    //   }
+    // });
   </script>
 </body>
 
