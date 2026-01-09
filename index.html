@@ -65,29 +65,44 @@
           return;
         }
 
+        // Check if PLID exists
+        const plid = window.partnerLinkLibrary.getPlid();
+        if (!plid) {
+          output.innerHTML = 'ERROR: No Partner Link ID found in URL. Add ?plid=YOUR_ID to the URL.';
+          return;
+        }
+
         // Extract form data
         const signUpData = window.partnerLinkLibrary.getSignUpDataFromFormElement(form);
         console.log('Extracted data:', signUpData);
 
         // Send to Partner.io (fire and forget - don't await)
         if (signUpData && signUpData.length > 0) {
-          window.partnerLinkLibrary.recordSignUpEvent(signUpData)
-            .then(function (statusCode) {
-              console.log('API status code:', statusCode);
+          const request = window.partnerLinkLibrary.recordSignUpEvent(signUpData);
 
-              output.innerHTML = `
-            <strong>SUCCESS</strong><br>
-            Status Code: ${statusCode}<br>
-            Data sent: ${JSON.stringify(signUpData, null, 2)}<br>
-            Check Network tab for POST to /tracking/partner-links
-          `;
+          // Check if request was actually made
+          if (request && request.then) {
+            request
+              .then(function (statusCode) {
+                console.log('API status code:', statusCode);
 
-              form.reset();
-            })
-            .catch(function (error) {
-              console.error('Error:', error);
-              output.innerHTML = `<strong>FAILED</strong><br>${error.message}`;
-            });
+                output.innerHTML = `
+              <strong>SUCCESS</strong><br>
+              Status Code: ${statusCode}<br>
+              PLID: ${plid}<br>
+              Data sent: ${JSON.stringify(signUpData, null, 2)}<br>
+              Check Network tab for POST to /tracking/partner-links
+            `;
+
+                form.reset();
+              })
+              .catch(function (error) {
+                console.error('Error:', error);
+                output.innerHTML = `<strong>FAILED</strong><br>${error.message}`;
+              });
+          } else {
+            output.innerHTML = 'ERROR: Failed to initiate tracking request';
+          }
         } else {
           output.innerHTML = 'ERROR: No form data extracted';
         }
